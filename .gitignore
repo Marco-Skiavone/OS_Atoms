@@ -1,2 +1,8 @@
 .vscode
 .vscode/*
+
+*.o
+application
+atom
+activator
+power_supplier
