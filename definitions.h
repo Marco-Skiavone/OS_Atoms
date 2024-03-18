@@ -46,6 +46,7 @@
 
 /* Number of parameters */
 #define N_PARAMS 9
+#define MAX_STR_LEN 30
 
 #define SHM_KEY	11
 #define MAIN_SEM_KEY 21
