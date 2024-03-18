@@ -15,7 +15,7 @@ For info about the project, please check out the [assignment](20231222_Progetto_
 - `STEP_ATTIVATORE` : time step for activator to broadcast a signal
 - `STEP_ALIMENTAZIONE` : time step (nanosec) for creating *N_NUOVI_ATOMI* new atoms
 - `N_NUOVI_ATOMI` : new atoms created by power_supplier
-- `SIM_DURATION` :max duration time (sec) of the simulation
+- `SIM_DURATION` : max duration time (sec) of the simulation
 - `ENERGY_EXPLODE_THRESHOLD` : energy limit over which the simulation ends in the ***explode*** termination case
 ---
 ### Termination cases:
@@ -27,3 +27,4 @@ For info about the project, please check out the [assignment](20231222_Progetto_
 ### Other important details:
 - Energy liberation is calculated as follow: `E(a, b) = a*b - max(a, b)`
     where **a** & **b** are the atomic numbers of the 2 atoms generated after the nuclear fission of the parent. 
+- To see implementation **choices**, see the [dedicated section](./Implementation.md).

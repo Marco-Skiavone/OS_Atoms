@@ -2,7 +2,7 @@ CC = gcc
 # flags defined by the assignment:
 CFLAGS = -Wvla -Wextra -Werror
 # var is the param to use 
-var = 0
+var = 1
 # can add other libraries below
 OBJS = *lib.o
 SOURCES = *.c
@@ -24,7 +24,7 @@ all: $(OBJS)
 run: all
 	./$(TARGET) $(var)
 
-clear: 
+clear: ipcrm
 	rm -f *.o $(TARGET) $(ATOM) $(ACTIVATOR) $(PW_SUP)
 
 ipcrm:
