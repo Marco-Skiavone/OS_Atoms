@@ -6,3 +6,5 @@ application
 atom
 activator
 power_supplier
+
+--library=m

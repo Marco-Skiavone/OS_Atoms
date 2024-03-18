@@ -43,7 +43,6 @@ int main(int argc, char* argv[]) {
 	shm_ptr = shm_attach(ID_SHM);
 
     /* setting the semaphores */
-    printf("id sem: %d\n", ID_MAIN_SEM);
     sem_set_all(ID_MAIN_SEM, 1, 5);
     sem_set_val(ID_MAIN_SEM, 0, N_ATOMI_INIT + 2);  /* to synch the children */
 
@@ -90,6 +89,7 @@ int main(int argc, char* argv[]) {
             fprintf(stderr, "\nChild returned with status: %d.\n", status);
     }
 
+    printf("\nAll starting children terminated.\n");
     /* ending closures */
     shm_destroy(ID_SHM);
     TEST_ERROR
@@ -97,10 +97,12 @@ int main(int argc, char* argv[]) {
     TEST_ERROR
     sem_destroy(ID_ACTIV_SEM);
     TEST_ERROR
+    printf("IPC resources closed.\n");
 
     /* free() of the dynamic memory */
     free(children_argv[0]);
     TEST_ERROR
     free(children_argv);
     TEST_ERROR
+    printf("Memory free()s executed.\n");
 }
