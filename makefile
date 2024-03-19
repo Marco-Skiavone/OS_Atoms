@@ -4,28 +4,29 @@ CFLAGS = -Wvla -Wextra -Werror
 # var is the param to use 
 var = 1
 # can add other libraries below
-OBJS = *lib.o
-SOURCES = *.c
+OBJS = ./build/*lib.o
+SOURCES = ./src/*.c
 # application names
-TARGET = application
-ATOM = atom
-ACT = activator
-PW_SUP = power_supplier
+TARGET = ./bin/application.out
+ATOM = ./bin/atom.out
+ACT = ./bin/activator.out
+PW_SUP = ./bin/power_supplier.out
 
 $(OBJS): $(SOURCES)
 	gcc $(CFLAGS) $(SOURCES) -c
+	mv ./*.o ./build
 
 all: $(OBJS)
-	gcc $(OBJS) master.o -o $(TARGET) -lm
-	gcc $(OBJS) atom.o -o $(ATOM) -lm
-	gcc $(OBJS) activator.o -o $(ACTIVATOR) -lm
-	gcc $(OBJS) power_supplier.o -o $(PW_SUP) -lm
+	gcc $(OBJS) ./build/master.o -o $(TARGET)
+	gcc $(OBJS) ./build/atom.o -o $(ATOM)
+	gcc $(OBJS) ./build/activator.o -o $(ACTIVATOR) -lm
+	gcc $(OBJS) ./build/power_supplier.o -o $(PW_SUP)
 
 run: all
 	./$(TARGET) $(var)
 
 clear: ipcrm
-	rm -f *.o $(TARGET) $(ATOM) $(ACTIVATOR) $(PW_SUP)
+	rm -f ./bin/*.out ./build/*.o ./--library=m
 
 ipcrm:
 	ipcrm --all
