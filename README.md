@@ -1,7 +1,7 @@
 # OS_Atoms
 This is the project part for the OS course, year 2023-2024.
 
-For info about the project, please check out the [assignment](20231222_Progetto_SO_DEFINITIVO_2023_24.pdf) (it is written in Italian). 
+For info about the project, please check out the [assignment](./assignment/20231222_Progetto_SO_DEFINITIVO_2023_24.pdf) (it is written in Italian). 
 
 > This is made just for fun.
 
@@ -27,4 +27,4 @@ For info about the project, please check out the [assignment](20231222_Progetto_
 ### Other important details:
 - Energy liberation is calculated as follow: `E(a, b) = a*b - max(a, b)`
     where **a** & **b** are the atomic numbers of the 2 atoms generated after the nuclear fission of the parent. 
-- To see implementation **choices**, see the [dedicated section](./Implementation.md).
+- To see implementation **choices**, see the [dedicated section](./assignment/Implementation.md).
