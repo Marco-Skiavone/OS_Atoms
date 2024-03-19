@@ -46,7 +46,7 @@
 
 /* Number of parameters */
 #define N_PARAMS 9
-#define MAX_STR_LEN 30
+#define MAX_STR_LEN 35
 
 #define SHM_KEY	11
 #define MAIN_SEM_KEY 21
@@ -63,8 +63,8 @@
 
 #define TEST_ERROR 								\
 	if (errno) {								\
-		fprintf(stderr, "%s:%d: PID=%5d: Error %d (%s)\n", __FILE__, __LINE__, \
-			getpid(), errno, strerror(errno)); 	\
+		fprintf(stderr, "%s:%d: PID=%5d: Error %d: %s (%s)\n", __FILE__, __LINE__, \
+			getpid(), errno, strerrorname_np(errno),  strerror(errno)); 	\
 		errno=0;								\
 	}
 
@@ -76,6 +76,7 @@
  * - 2 ints -> taken_energy
  * - 2 ints -> slag */
 #define ID_SHM ipc_ids[0]
+
 /** Managed as:
  * - 1 coordination semaphore (used at launch)
  * - 4 write on memory semaphore 
@@ -85,9 +86,11 @@
  * 		- released
  * 		- slag)*/
 #define ID_MAIN_SEM ipc_ids[1]
+
 /** Set by the activator to a chosen number, released by the atoms */
 #define ID_ACTIV_SEM ipc_ids[2]
 
+	
 
 /* ------- STRUCTS ------- */
 

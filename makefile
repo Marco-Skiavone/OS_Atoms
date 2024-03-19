@@ -19,14 +19,14 @@ $(OBJS): $(SOURCES)
 all: $(OBJS)
 	gcc $(OBJS) ./build/master.o -o $(TARGET)
 	gcc $(OBJS) ./build/atom.o -o $(ATOM)
-	gcc $(OBJS) ./build/activator.o -o $(ACTIVATOR) -lm
 	gcc $(OBJS) ./build/power_supplier.o -o $(PW_SUP)
+	gcc $(OBJS) ./build/activator.o -o $(ACT)
 
 run: all
 	./$(TARGET) $(var)
 
 clear: ipcrm
-	rm -f ./bin/*.out ./build/*.o ./--library=m
+	rm -f ./bin/*.out ./build/*.o
 
 ipcrm:
 	ipcrm --all

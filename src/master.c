@@ -1,5 +1,6 @@
 #include "definitions.h"
 #include "ipc_lib.h"
+#include "master_lib.h"
 
 /* \# of children forked, incremented every time a fork is executed */
 int children_number;
@@ -8,7 +9,6 @@ int ipc_ids[3];
 memory_map* shm_ptr;
 
 void signal_handler(int signo) {
-    int i;
     switch(signo) {
         case SIGTERM:
             /* changing external flag */
@@ -23,12 +23,13 @@ void signal_handler(int signo) {
 
 int main(int argc, char* argv[]) {
 	/* declarations */
-	int i, file_line_number, status, child_pid, fork_error;
+	int i, file_line_number, status, fatal_error;
 	FILE *config_file;
     char **children_argv;
     struct sigaction sa_master;
 
     /* initial operations */
+    fatal_error = 0;
     children_number = 0;
 	if(argc != 2){
 		fprintf(stderr, "Invalid argument number. Choose a configuration set to launch the simulation.\n");
@@ -43,10 +44,6 @@ int main(int argc, char* argv[]) {
 	sem_allocate(&(ID_MAIN_SEM), &(ID_ACTIV_SEM));
 	ID_SHM = shm_allocate();
 	shm_ptr = shm_attach(ID_SHM);
-
-    /* setting the semaphores */
-    sem_set_all(ID_MAIN_SEM, 1, 5);
-    sem_set_val(ID_MAIN_SEM, 0, N_ATOMI_INIT + 3);  /* to synch the children */
 
 	/* read the file to set the parameters */
 	file_line_number = atoi(argv[1]);
@@ -78,30 +75,53 @@ int main(int argc, char* argv[]) {
 	TEST_ERROR
     printf("\nParams:\nENERGY_DEMAND: %d,\nN_ATOMI_INIT: %d,\nN_ATOM_MAX: %d,\nMIN_N_ATOMICO: %d,\nSTEP_ATTIVATORE: %d,\nSTEP_ALIMENTAZIONE: %d,\nN_NUOVI_ATOMI: %d,\nSIM_DURATION: %d,\nENERGY_EXPLODE_THRESHOLD: %d\n\n", 
         ENERGY_DEMAND, N_ATOMI_INIT, N_ATOM_MAX, MIN_N_ATOMICO, STEP_ATTIVATORE, STEP_ALIMENTAZIONE, N_NUOVI_ATOMI, SIM_DURATION, ENERGY_EXPLODE_THRESHOLD);
+    
+    /* control parameters input */
+    i = 0;
+    switch((i = invalid_params(shm_ptr))){
+        case 0:
+            break;
+        case 1: 
+            ERROR("invalid param. value")
+            fatal_error = -1;
+            break;
+        default:
+            ERROR("multiple invalid param. values")
+            fprintf(stderr, "Found %d values out of range.\n", i);
+            fatal_error = -1;
+            break;
+    }
+
+    /* setting the semaphores */
+    sem_set_all(ID_MAIN_SEM, 1, 5);
+    sem_set_val(ID_MAIN_SEM, 0, (N_ATOMI_INIT + 2));  /* to synch the children */
 
     /* setting up children */
-    fork_error = 0;
-    while(children_number < N_ATOMI_INIT + 2 && !fork_error) {
-        switch((child_pid = fork())) {
+    fatal_error = 0;
+    while(children_number < N_ATOMI_INIT + 2 && !fatal_error) {
+        switch(fork()) {
             case 0:
                 if (children_number == 0) {    
                     /* power_supplier */
-                    children_argv[0] = "./power_supplier.out";
-                    execv("./power_supplier.out", children_argv);
+                    children_argv[0] = strcpy(children_argv[0], "./bin/power_supplier.out");
+                    execv("./bin/power_supplier.out", children_argv);
                     ERROR("execv failed")
-                    fork_error = 1;
+                    TEST_ERROR
+                    fatal_error = 1;
                 } else if (children_number == 1) { 
                     /* activator */
-                    children_argv[0] = "./activator.out";
-                    execv("./activator.out", children_argv);
+                    children_argv[0] = strcpy(children_argv[0], "./bin/activator.out");
+                    execv("./bin/activator.out", children_argv);
                     ERROR("execv failed")
-                    fork_error = 2;
+                    TEST_ERROR
+                    fatal_error = 2;
                 } else {    
                     /* atom */
-                    children_argv[0] = "./atom.out";
-                    execv("./atom.out", children_argv);
+                    children_argv[0] = strcpy(children_argv[0], "./bin/atom.out");
+                    execv("./bin/atom.out", children_argv);
                     ERROR("execv failed")
-                    fork_error = 2 + children_number;
+                    TEST_ERROR
+                    fatal_error = 3 + children_number;
                 }
                 break;
             default:
@@ -111,9 +131,9 @@ int main(int argc, char* argv[]) {
         children_number++;
     }
 
-    if(fork_error) {
-        fprintf(stderr, "\nError occurred in the \"execv()\" execution.\nfork_error = %d\n\n", 
-            fork_error);
+    if(fatal_error) {
+        fprintf(stderr, "\nError occurred in the \"execv()\" execution. fatal_error = %d\n\n", 
+            fatal_error);
         TEST_ERROR
     } else {
         /* preparation for main cycle */
@@ -123,33 +143,37 @@ int main(int argc, char* argv[]) {
         sigaction(SIGALRM, &sa_master, NULL);
         sigaction(SIGTERM, &sa_master, NULL);
         sem_wait_zero(ID_MAIN_SEM, 0);
-        
+    
         /* main cycle */
 
     }
 
     /* waiting children status */
     for(i = 0; i < children_number; i++){
-        wait(&status);
-        TEST_ERROR
-        if(status != 0)
+        if(!WIFEXITED(status))
             fprintf(stderr, "\nChild returned with status: %d.\n", status);
+        if (errno != EINTR)
+            i++;
+		status = 0;
     }
-    printf("\nAll starting children terminated.\n");
+    if(children_number)
+        printf("\n%s: All %d children terminated.\n", __FILE__, children_number);
 
     /* ending closures */
+    shm_detach(shm_ptr);
+    TEST_ERROR
     shm_destroy(ID_SHM);
     TEST_ERROR
     sem_destroy(ID_MAIN_SEM);
     TEST_ERROR
     sem_destroy(ID_ACTIV_SEM);
     TEST_ERROR
-    printf("IPC resources closed.\n");
+    printf("%s: IPC resources closed.\n", __FILE__);
 
     /* free() of the dynamic memory */
     free(children_argv[0]);
     TEST_ERROR
     free(children_argv);
     TEST_ERROR
-    printf("Memory free()s executed.\n");
+    printf("%s: Memory free()s executed.\n", __FILE__);
 }
