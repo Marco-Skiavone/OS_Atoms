@@ -11,9 +11,10 @@ void signal_handler(int signo) {
     int i;
     switch(signo) {
         case SIGTERM:
-            shm_detach(shm_ptr);
             /* changing external flag */
             break;
+        case SIGALRM:
+            break; 
         default:
             ERROR("default case in signal_handler")
             exit(EXIT_FAILURE);
@@ -22,9 +23,10 @@ void signal_handler(int signo) {
 
 int main(int argc, char* argv[]) {
 	/* declarations */
-	int i, j, file_line_number, status;
+	int i, file_line_number, status, child_pid, fork_error;
 	FILE *config_file;
     char **children_argv;
+    struct sigaction sa_master;
 
     /* initial operations */
     children_number = 0;
@@ -44,7 +46,7 @@ int main(int argc, char* argv[]) {
 
     /* setting the semaphores */
     sem_set_all(ID_MAIN_SEM, 1, 5);
-    sem_set_val(ID_MAIN_SEM, 0, N_ATOMI_INIT + 2);  /* to synch the children */
+    sem_set_val(ID_MAIN_SEM, 0, N_ATOMI_INIT + 3);  /* to synch the children */
 
 	/* read the file to set the parameters */
 	file_line_number = atoi(argv[1]);
@@ -78,18 +80,63 @@ int main(int argc, char* argv[]) {
         ENERGY_DEMAND, N_ATOMI_INIT, N_ATOM_MAX, MIN_N_ATOMICO, STEP_ATTIVATORE, STEP_ALIMENTAZIONE, N_NUOVI_ATOMI, SIM_DURATION, ENERGY_EXPLODE_THRESHOLD);
 
     /* setting up children */
+    fork_error = 0;
+    while(children_number < N_ATOMI_INIT + 2 && !fork_error) {
+        switch((child_pid = fork())) {
+            case 0:
+                if (children_number == 0) {    
+                    /* power_supplier */
+                    children_argv[0] = "./power_supplier.out";
+                    execv("./power_supplier.out", children_argv);
+                    ERROR("execv failed")
+                    fork_error = 1;
+                } else if (children_number == 1) { 
+                    /* activator */
+                    children_argv[0] = "./activator.out";
+                    execv("./activator.out", children_argv);
+                    ERROR("execv failed")
+                    fork_error = 2;
+                } else {    
+                    /* atom */
+                    children_argv[0] = "./atom.out";
+                    execv("./atom.out", children_argv);
+                    ERROR("execv failed")
+                    fork_error = 2 + children_number;
+                }
+                break;
+            default:
+                /* master */
+                break;
+        }
+        children_number++;
+    }
 
-    /* main cycle */
+    if(fork_error) {
+        fprintf(stderr, "\nError occurred in the \"execv()\" execution.\nfork_error = %d\n\n", 
+            fork_error);
+        TEST_ERROR
+    } else {
+        /* preparation for main cycle */
+        sa_master.sa_handler = signal_handler;
+        sa_master.sa_flags = 0;
+        sigemptyset(&(sa_master.sa_mask));
+        sigaction(SIGALRM, &sa_master, NULL);
+        sigaction(SIGTERM, &sa_master, NULL);
+        sem_wait_zero(ID_MAIN_SEM, 0);
+        
+        /* main cycle */
+
+    }
 
     /* waiting children status */
-    for(i = 0; i < children_number; i ++){
+    for(i = 0; i < children_number; i++){
         wait(&status);
         TEST_ERROR
         if(status != 0)
             fprintf(stderr, "\nChild returned with status: %d.\n", status);
     }
-
     printf("\nAll starting children terminated.\n");
+
     /* ending closures */
     shm_destroy(ID_SHM);
     TEST_ERROR

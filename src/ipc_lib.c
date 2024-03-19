@@ -23,6 +23,12 @@ int sem_find(key_t key, int nsems) {
     return id;
 }
 
+void sem_linking(int *id_main_sem, int *id_activ_sem){
+    printf("agent: %s\n", __FILE__);
+    printf("- main_sem linked to id: %d\n", *id_main_sem = sem_find(MAIN_SEM_KEY, 5));
+    printf("- activ_sem linked to id: %d\n", *id_activ_sem = sem_find(ACTIV_SEM_KEY, 1));
+}
+
 void sem_reserve(int semid, int sem_num) {
     struct sembuf sops;
     sops.sem_num = sem_num;

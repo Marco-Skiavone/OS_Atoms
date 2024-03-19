@@ -68,8 +68,24 @@
 		errno=0;								\
 	}
 
+/** Memory managed as:
+ * - N_PARAMS params
+ * - 2 ints -> activation_num
+ * - 2 ints -> split_num
+ * - 2 ints -> released_energy
+ * - 2 ints -> taken_energy
+ * - 2 ints -> slag */
 #define ID_SHM ipc_ids[0]
+/** Managed as:
+ * - 1 coordination semaphore (used at launch)
+ * - 4 write on memory semaphore 
+ * (can be 0 or 1 for whoever requires to access the memory sections of:
+ * 		- activation
+ * 		- split
+ * 		- released
+ * 		- slag)*/
 #define ID_MAIN_SEM ipc_ids[1]
+/** Set by the activator to a chosen number, released by the atoms */
 #define ID_ACTIV_SEM ipc_ids[2]
 
 

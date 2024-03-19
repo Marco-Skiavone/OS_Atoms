@@ -19,6 +19,9 @@ void sem_allocate(int *id_main_sem, int *id_activ_sem);
 /* Attach to a previously created sem. set */
 int sem_find(key_t key, int nsems);
 
+/* Call the sem_find to attach to the created semaphores */
+void sem_linking(int *id_main_sem, int *id_activ_sem);
+
 /* Execute the "reserve": blocking untill -1 operation is possible */
 void sem_reserve(int id, int sem_num);
 
