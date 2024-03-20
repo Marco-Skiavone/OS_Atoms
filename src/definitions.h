@@ -90,7 +90,6 @@
 /** Set by the activator to a chosen number, released by the atoms */
 #define ID_ACTIV_SEM ipc_ids[2]
 
-	
 
 /* ------- STRUCTS ------- */
 
@@ -113,6 +112,5 @@ typedef struct _memory_map {
 	/* n. of slag made in the simulation */
 	single_stat slag;
 } memory_map;
-
 
 #endif 

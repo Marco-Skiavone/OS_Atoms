@@ -46,6 +46,15 @@ int main(int argc, char* argv[]) {
     children_argv[0] = strcpy(children_argv[0], "./atom.out");
     children_argv[1] = NULL;
 
+    /* atomic number definition */
+    if(argc == 2) {
+        atomic_number = atoi(argv[1]);
+        TEST_ERROR
+    } else {
+        atomic_number = (rand() % (N_ATOM_MAX + MIN_N_ATOMICO)) + MIN_N_ATOMICO;
+        /* atomic_number *= (1 - PRESENCE_INDEX); */
+    }
+
 	/* semaphore wait_for_zero: start of the simulation */
 	sem_reserve(ID_MAIN_SEM, 0);
 	sem_wait_zero(ID_MAIN_SEM, 0);
@@ -73,6 +82,6 @@ int main(int argc, char* argv[]) {
     TEST_ERROR
     free(children_argv);
     TEST_ERROR
-    printf("%s: Memory free()s executed.\n", __FILE__);
 	
+    printf("%s: process ended.\n", __FILE__);
 }
