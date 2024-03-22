@@ -5,4 +5,7 @@
 /* Return the \# of invalid parameters found */
 int invalid_params(memory_map *shm_ptr);
 
+/* Print the final termination state */
+void print_termination(int state);
+
 #endif

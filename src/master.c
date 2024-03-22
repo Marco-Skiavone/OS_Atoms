@@ -7,14 +7,17 @@ int children_number;
 /* id_shm, id_main_sem, id_activator_sem */
 int ipc_ids[3];
 memory_map* shm_ptr;
+int termination;
 
 void signal_handler(int signo) {
     switch(signo) {
         case SIGTERM:
             /* changing external flag */
+            print_termination(TERMINATION_STATE);
+            termination = 1;
             break;
         case SIGALRM:
-            break; 
+            break;
         default:
             ERROR("default case in signal_handler")
             exit(EXIT_FAILURE);
@@ -29,6 +32,7 @@ int main(int argc, char* argv[]) {
     struct sigaction sa_master;
 
     /* initial operations */
+    termination = 0;
     fatal_error = 0;
     children_number = 0;
 	if(argc != 2){
@@ -83,12 +87,12 @@ int main(int argc, char* argv[]) {
             break;
         case 1: 
             ERROR("invalid param. value")
-            fatal_error = -1;
+            fatal_error = -3;
             break;
         default:
             ERROR("multiple invalid param. values")
             fprintf(stderr, "Found %d values out of range.\n", i);
-            fatal_error = -1;
+            fatal_error = -3;
             break;
     }
 
@@ -97,9 +101,22 @@ int main(int argc, char* argv[]) {
     sem_set_val(ID_MAIN_SEM, 0, (N_ATOMI_INIT + 2));  /* to synch the children */
 
     /* setting up children */
-    fatal_error = 0;
+    if(setpgid(0, 0)){
+        ERROR("set_group failed")
+        TEST_ERROR
+        fatal_error = -2;
+    }
+
     while(children_number < N_ATOMI_INIT + 2 && !fatal_error) {
-        switch(fork()) {
+        pid_t child_pid;
+        switch(child_pid = fork()) {
+            case -1:
+                ERROR("fork() failed")
+                TEST_ERROR
+                fatal_error = -1;
+                killpg(0, SIGTERM); /* sends SIGNO to all current group processes */
+                TEST_ERROR
+                break;
             case 0:
                 if (children_number == 0) {    
                     /* power_supplier */
@@ -126,14 +143,17 @@ int main(int argc, char* argv[]) {
                 break;
             default:
                 /* master */
+                if(child_pid != -1)
+                    children_number++;
                 break;
         }
-        children_number++;
     }
 
     if(fatal_error) {
         fprintf(stderr, "\nError occurred in the \"execv()\" execution. fatal_error = %d\n\n", 
             fatal_error);
+        TEST_ERROR
+        killpg(0, SIGTERM);
         TEST_ERROR
     } else {
         /* preparation for main cycle */
@@ -145,7 +165,8 @@ int main(int argc, char* argv[]) {
         sem_wait_zero(ID_MAIN_SEM, 0);
     
         /* main cycle */
-
+        /* @todo loop on *termination* condition */
+        
     }
 
     /* waiting children status */

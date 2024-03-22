@@ -15,3 +15,27 @@ int invalid_params(memory_map *shm_ptr){
 		exit++;
 	return exit;
 }
+
+void print_termination(int state){
+	char *cause = (char *) malloc(sizeof(char) * MAX_STR_LEN);
+	fprintf(stderr, "\n\n------- END OF SIMULATION! -------\n");
+	switch (state) {
+		case 0:
+			cause = "TIMEOUT";
+			break;
+		case 1:
+			cause = "EXPLODE";
+			break;
+		case 2:
+			cause = "BLACKOUT";
+			break;
+		case 3:
+			cause = "MELTDOWN";
+			break;
+		default:
+			cause = "UNKNOWN";
+			break;
+	}
+	fprintf(stderr, "Termination Cause: %s\n", cause);
+	/* @todo other prints */
+}

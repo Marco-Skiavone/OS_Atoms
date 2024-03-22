@@ -11,7 +11,7 @@ int sem_create(key_t key, int nsems) {
 }
 
 void sem_allocate(int *id_main_sem, int *id_activ_sem) {
-    printf("- main_sem created with id: %d\n", *id_main_sem = sem_create(MAIN_SEM_KEY, 5)); /* 1 for coordination + 4 for stats */
+    printf("- main_sem created with id: %d\n", *id_main_sem = sem_create(MAIN_SEM_KEY, 6)); /* 1 for coordination + 5 for stats */
     printf("- activ_sem created with id: %d\n", *id_activ_sem = sem_create(ACTIV_SEM_KEY, 1));
 }
 
@@ -27,7 +27,7 @@ int sem_find(key_t key, int nsems) {
 }
 
 void sem_linking(int *id_main_sem, int *id_activ_sem) {
-    *id_main_sem = sem_find(MAIN_SEM_KEY, 5);
+    *id_main_sem = sem_find(MAIN_SEM_KEY, 6);
     *id_activ_sem = sem_find(ACTIV_SEM_KEY, 1);
 }
 

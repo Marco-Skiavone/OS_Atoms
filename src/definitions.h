@@ -90,6 +90,9 @@
 /** Set by the activator to a chosen number, released by the atoms */
 #define ID_ACTIV_SEM ipc_ids[2]
 
+/* Integer used to to see the state of the simulation end. 
+ * Can be modified only if previous value is 0 and only by one process at a time */
+#define TERMINATION_STATE shm_ptr->termination_state
 
 /* ------- STRUCTS ------- */
 
@@ -101,16 +104,28 @@ typedef struct _single_stat {
 /** struct used for the shared memory in the simulation */
 typedef struct _memory_map {
 	int params[N_PARAMS];
+	
 	/* n. of activations occurred */
 	single_stat activation_num;
+
 	/* n. of splits occurred */
 	single_stat split_num;
+
 	/* n. of energy released by the processes */
 	single_stat released_energy;
+
 	/* n. of energy taken by the master */
 	single_stat taken_energy;
+
 	/* n. of slag made in the simulation */
 	single_stat slag;
+
+	/* its value is:
+	 * - 0 for timeout (default)
+	 * - 1 for explode
+	 * - 2 for blackout
+	 * - 3 for meltdown	*/
+	int termination_state;
 } memory_map;
 
 #endif 
